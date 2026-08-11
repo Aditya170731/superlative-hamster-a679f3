@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IronTrack — Gym Retention App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.js"></script>
+<style>
+  :root{
+    --bg:#0A0C0F; --panel:#14171D; --panel-2:#1B1F26; --panel-3:#20242C;
+    --border:#262B33; --border-soft:#1E222A;
+    --text:#F2F4F6; --text-dim:#8B94A0; --text-faint:#5B6270;
+    --danger:#FF4B5C; --danger-dim:#3A1E24;
+    --success:#B6FF3D; --success-dim:#1E2712;
+    --gold:#FFB020; --gold-dim:#2E230F;
+    --blue:#4DA3FF; --blue-dim:#122436;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; min-height:100vh; -webkit-font-smoothing:antialiased;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  ::selection{background:var(--success); color:#0A0C0F;}
+
+  .topbar{position:sticky; top:0; z-index:40; background:rgba(10,12,15,0.92); backdrop-filter:blur(10px); border-bottom:1px solid var(--border-soft); padding:14px 20px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;}
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand-mark{width:34px;height:34px;border-radius:8px; background:linear-gradient(135deg,var(--success),#7ED321 120%); display:flex;align-items:center;justify-content:center; color:#0A0C0F; font-family:'Bebas Neue'; font-size:20px; font-weight:700; flex-shrink:0;}
+  .brand-name{font-family:'Bebas Neue'; font-size:22px; letter-spacing:0.04em; line-height:1;}
+  .brand-sub{font-size:10px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.12em; margin-top:2px;}
+  .save-indicator{font-size:11px; color:var(--text-faint); display:flex; align-items:center; gap:6px;}
+  .save-dot{width:6px;height:6px;border-radius:50%; background:var(--success);}
+
+  .app-switch{display:flex; gap:6px; background:var(--panel); border:1px solid var(--border); border-radius:999px; padding:4px;}
+  .app-switch button{border:none; background:transparent; color:var(--text-dim); padding:8px 16px; border-radius:999px; font-size:13px; font-weight:600; cursor:pointer; transition:all .15s ease; font-family:'Inter';}
+  .app-switch button.active{background:var(--text); color:#0A0C0F;}
+  .app-switch button:hover:not(.active){color:var(--text);}
+
+  .container{max-width:1180px; margin:0 auto; padding:28px 20px 100px;}
+  .container.narrow{max-width:460px;}
+
+  .eyebrow{font-size:11px; text-transform:uppercase; letter-spacing:0.14em; color:var(--text-faint); font-weight:700; margin-bottom:6px;}
+  h1.page-title{font-family:'Bebas Neue'; font-size:34px; letter-spacing:0.02em; margin:0 0 4px;}
+  .page-sub{color:var(--text-dim); font-size:14px; margin:0 0 22px;}
+
+  .tabs{display:flex; gap:4px; border-bottom:1px solid var(--border-soft); margin-bottom:22px; overflow-x:auto;}
+  .tabs button{background:none;border:none;color:var(--text-dim); font-family:'Inter'; font-weight:600; font-size:13.5px; padding:10px 16px; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap;}
+  .tabs button.active{color:var(--text); border-bottom-color:var(--success);}
+
+  .card{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:18px;}
+  .btn{border:none; border-radius:10px; padding:11px 18px; font-weight:700; font-size:13.5px; cursor:pointer; font-family:'Inter'; display:inline-flex; align-items:center; gap:8px; transition:transform .1s ease, filter .15s ease;}
+  .btn:active{transform:scale(0.97);}
+  .btn-primary{background:var(--success); color:#0A0C0F;}
+  .btn-primary:hover{filter:brightness(1.08);}
+  .btn-outline{background:transparent; border:1px solid var(--border); color:var(--text);}
+  .btn-outline:hover{border-color:var(--text-dim);}
+  .btn-danger{background:var(--danger); color:#fff;}
+  .btn-ghost{background:var(--panel-3); color:var(--text);}
+  .btn-sm{padding:7px 12px; font-size:12px; border-radius:8px;}
+  .btn:disabled{opacity:0.4; cursor:not-allowed;}
+  .btn-block{width:100%; justify-content:center;}
+
+  .pill{display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.04em;}
+  .pill-danger{background:var(--danger-dim); color:var(--danger);}
+  .pill-success{background:var(--success-dim); color:var(--success);}
+  .pill-gold{background:var(--gold-dim); color:var(--gold);}
+  .pill-blue{background:var(--blue-dim); color:var(--blue);}
+  .pill-neutral{background:var(--panel-3); color:var(--text-dim);}
+
+  .kpi-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:28px;}
+  .kpi{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:16px 18px; position:relative; overflow:hidden;}
+  .kpi::before{content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--accent,var(--success));}
+  .kpi .kpi-label{font-size:11px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.08em; font-weight:700; margin-bottom:8px;}
+  .kpi .kpi-value{font-family:'Bebas Neue'; font-size:32px; line-height:1;}
+  .kpi .kpi-value span{font-size:15px; font-family:'Inter'; color:var(--text-dim); font-weight:600; margin-left:4px;}
+
+  .threshold-bar{display:flex; align-items:center; gap:14px; margin-bottom:18px; flex-wrap:wrap;}
+  .threshold-bar input[type=range]{accent-color:var(--danger); width:160px;}
+  .filter-chips{display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;}
+  .chip{padding:6px 13px; border-radius:999px; border:1px solid var(--border); background:var(--panel); color:var(--text-dim); font-size:12px; font-weight:600; cursor:pointer;}
+  .chip.active{background:var(--text); color:#0A0C0F; border-color:var(--text);}
+
+  .row-list{display:flex; flex-direction:column; gap:10px;}
+  .rl-row{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+  .avatar{width:42px;height:42px;border-radius:10px; background:var(--panel-3); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue'; font-size:16px; color:var(--text-dim); flex-shrink:0;}
+  .rl-main{flex:1; min-width:180px;}
+  .rl-name{font-weight:700; font-size:14.5px;}
+  .rl-meta{font-size:12px; color:var(--text-dim); margin-top:2px;}
+  .rl-tag{background:var(--danger-dim); color:var(--danger); font-family:'IBM Plex Mono'; font-weight:600; font-size:12px; padding:5px 10px; border-radius:6px; transform:rotate(-1.5deg); border:1px dashed var(--danger);}
+  .rl-actions{display:flex; gap:8px; flex-wrap:wrap;}
+
+  .rn-row{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+  .ao-order-row{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+
+  .phone-shell{background:var(--panel); border:1px solid var(--border); border-radius:24px; padding:0; overflow:hidden;}
+  .m-header{padding:20px 20px 16px; background:linear-gradient(160deg,#171B21,#101318); border-bottom:1px solid var(--border-soft);}
+  .m-viewing{display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;}
+  .m-viewing select{background:var(--panel-3); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:6px 10px; font-size:12px; font-family:'Inter'; font-weight:600; max-width:180px;}
+  .m-body{padding:20px;}
+
+  .membership-card{background:linear-gradient(135deg,#1B1F26,#12151A); border:1px solid var(--border); border-radius:16px; padding:18px; position:relative; overflow:hidden;}
+  .membership-card::after{content:''; position:absolute; right:-30px; top:-30px; width:120px; height:120px; border-radius:50%; background:radial-gradient(circle,rgba(182,255,61,0.10),transparent 70%);}
+  .mc-top{display:flex; justify-content:space-between; align-items:flex-start;}
+  .mc-plan{font-family:'Bebas Neue'; font-size:22px;}
+  .mc-expiry{font-size:12px; color:var(--text-dim); margin-top:2px;}
+
+  .streak-wrap{display:flex; align-items:center; gap:18px; margin:22px 0;}
+  .streak-ring{position:relative; width:96px; height:96px; flex-shrink:0;}
+  .streak-ring svg{transform:rotate(-90deg);}
+  .streak-num{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;}
+  .streak-num .n{font-family:'Bebas Neue'; font-size:28px; line-height:1; color:var(--success);}
+  .streak-num .l{font-size:9px; color:var(--text-faint); text-transform:uppercase; letter-spacing:0.08em; margin-top:2px;}
+  .week-dots{display:flex; gap:6px;}
+  .week-dot{width:16px;height:16px;border-radius:4px; background:var(--panel-3); border:1px solid var(--border);}
+  .week-dot.filled{background:var(--success); border-color:var(--success);}
+
+  #qrCanvasHolder{background:#fff; width:180px; height:180px; margin:0 auto; border-radius:12px; padding:10px; display:flex; align-items:center; justify-content:center;}
+  #qrCanvasHolder img, #qrCanvasHolder canvas{width:100% !important; height:100% !important;}
+  .checkin-success{text-align:center; padding:30px 10px;}
+  .checkin-success .tick{width:64px;height:64px; border-radius:50%; background:var(--success-dim); border:2px solid var(--success); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; color:var(--success); font-size:30px;}
+
+  .plan-option{border:1px solid var(--border); background:var(--panel-2); border-radius:12px; padding:14px 16px; margin-bottom:10px; cursor:pointer; display:flex; justify-content:space-between; align-items:center;}
+  .plan-option.selected{border-color:var(--success); background:var(--success-dim);}
+  .plan-option .po-price{font-family:'Bebas Neue'; font-size:20px;}
+  .plan-option .po-strike{font-size:11px; color:var(--text-faint); text-decoration:line-through; margin-right:4px;}
+
+  .addon-card{border:1px solid var(--border); background:var(--panel-2); border-radius:14px; padding:16px; margin-bottom:12px;}
+  .addon-cat{font-size:10px; text-transform:uppercase; letter-spacing:0.1em; font-weight:700; color:var(--gold); margin-bottom:6px;}
+  .addon-title{font-weight:700; font-size:15px; margin-bottom:4px;}
+  .addon-desc{font-size:12.5px; color:var(--text-dim); margin-bottom:10px; line-height:1.5;}
+  .addon-foot{display:flex; justify-content:space-between; align-items:center;}
+  .addon-price{font-family:'Bebas Neue'; font-size:19px;}
+
+  .bottom-nav{display:flex; border-top:1px solid var(--border-soft); background:var(--panel);}
+  .bottom-nav button{flex:1; background:none; border:none; color:var(--text-faint); padding:12px 4px 10px; font-family:'Inter'; font-weight:600; font-size:10.5px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px;}
+  .bottom-nav button.active{color:var(--success);}
+  .bottom-nav .ic{font-size:17px;}
+
+  .search-input{width:100%; padding:13px 16px; border-radius:12px; background:var(--panel-2); border:1px solid var(--border); color:var(--text); font-size:14px; font-family:'Inter';}
+  .fd-row{background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); padding:13px 16px; display:flex; align-items:center; gap:14px; margin-bottom:10px;}
+
+  .modal-backdrop{position:fixed; inset:0; background:rgba(6,7,9,0.7); backdrop-filter:blur(3px); z-index:100; display:flex; align-items:center; justify-content:center; padding:20px;}
+  .modal{background:var(--panel-2); border:1px solid var(--border); border-radius:16px; padding:22px; width:100%; max-width:420px; max-height:88vh; overflow-y:auto;}
+  .modal h3{font-family:'Bebas Neue'; font-size:22px; margin:0 0 14px;}
+  .modal label{display:block; font-size:12px; font-weight:700; color:var(--text-dim); margin:14px 0 6px; text-transform:uppercase; letter-spacing:0.05em;}
+  .modal select, .modal input, .modal textarea{width:100%; background:var(--panel-3); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:10px 12px; font-family:'Inter'; font-size:13.5px;}
+  .modal-actions{display:flex; gap:10px; margin-top:20px;}
+  .field-row{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+
+  #toast-wrap{position:fixed; bottom:20px; left:50%; transform:translateX(-50%); z-index:200; display:flex; flex-direction:column; gap:8px; align-items:center; width:100%; pointer-events:none;}
+  .toast{background:var(--panel-3); border:1px solid var(--border); color:var(--text); padding:12px 18px; border-radius:10px; font-size:13px; font-weight:600; box-shadow:0 10px 30px rgba(0,0,0,0.4); animation:toastIn .25s ease; display:flex; align-items:center; gap:8px; max-width:340px;}
+  .toast.success{border-color:var(--success);}
+  .toast.danger{border-color:var(--danger);}
+  @keyframes toastIn{from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);}}
+
+  .empty-state{text-align:center; padding:50px 20px; color:var(--text-dim);}
+  .empty-state .ic{font-size:34px; margin-bottom:10px;}
+
+  .audit-row{display:flex; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--border-soft); font-size:12.5px; gap:10px;}
+  .audit-row:last-child{border-bottom:none;}
+  .audit-row .a-time{color:var(--text-faint); font-family:'IBM Plex Mono'; font-size:11px; white-space:nowrap;}
+
+  .scan-video-wrap{position:relative; width:100%; border-radius:14px; overflow:hidden; background:#000; aspect-ratio:1/1;}
+  .scan-video-wrap video{width:100%; height:100%; object-fit:cover;}
+  .scan-frame{position:absolute; inset:14%; border:2px solid var(--success); border-radius:12px; box-shadow:0 0 0 999px rgba(0,0,0,0.35);}
+  .scan-status{text-align:center; font-size:12.5px; color:var(--text-dim); margin-top:10px;}
+
+  .loading-screen{display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:70vh; gap:14px; color:var(--text-dim);}
+  .spinner{width:28px;height:28px;border-radius:50%; border:3px solid var(--panel-3); border-top-color:var(--success); animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  @media(max-width:860px){ .kpi-grid{grid-template-columns:repeat(2,1fr);} }
+  @media(max-width:520px){ .kpi-grid{grid-template-columns:1fr 1fr;} .container{padding:20px 14px 100px;} h1.page-title{font-size:28px;} .field-row{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="brand-mark">I</div>
+    <div>
+      <div class="brand-name">IRONTRACK</div>
+      <div class="brand-sub">Gym Retention System</div>
+    </div>
+  </div>
+  <div style="display:flex; align-items:center; gap:14px;">
+    <div class="save-indicator" id="saveIndicator"><span class="save-dot"></span>Saved on this device</div>
+    <div class="app-switch" id="appSwitch"></div>
+  </div>
+</div>
+
+<div id="root"><div class="loading-screen"><div class="spinner"></div>Loading your gym data…</div></div>
+<div id="toast-wrap"></div>
+<div id="modal-root"></div>
+
+<script>
+/* ================= CONSTANTS ================= */
+const trainers = ['Rohit K.', 'Anita S.', 'Farah M.'];
+const DAY = 86400000;
+
+const planCatalog = [
+  {key:'monthly', label:'Monthly', months:1, price:1200},
+  {key:'quarterly', label:'Quarterly', months:3, price:3300},
+  {key:'half-yearly', label:'Half-Yearly', months:6, price:6000},
+  {key:'yearly', label:'Yearly', months:12, price:10999},
+];
+function planStrike(months){ return 1200*months; }
+
+const addOnCatalog = [
+  {id:'pt', category:'Personal Training', title:'12-Session PT Pack', desc:'One-on-one strength coaching with a certified trainer and progress tracking.', price:4999, meta:'12 sessions · 60-day validity', stockKey:null},
+  {id:'diet', category:'Diet Plans', title:'Custom Diet Plan — 1 Month', desc:'Personalised meal plan built by a certified nutritionist for your goal.', price:1499, meta:'1 month · Certified nutritionist', stockKey:null},
+  {id:'whey', category:'Protein & Supplements', title:'Whey Protein — 1kg', desc:'Sealed, in-stock. Invoice provided at pickup or delivery.', price:2199, meta:null, stockKey:'whey'},
+];
+
+/* ================= STATE (persisted) ================= */
+let state = {
+  app: 'owner', ownerTab: 'dashboard', redlistFilter: 'all', threshold: 10,
+  members: [],
+  addOnOrders: [],
+  auditLog: [],
+  stock: {whey: 12},
+  meta: {todayCheckins:0, checkinsDate:null, renewalCollected:0, addOnRevenue:0, returnedCount:0},
+  viewingMemberId: null,
+  memberTab: 'home',
+  selectedPlanIdx: 0,
+  fdQuery: '',
+  scanning: false,
+  ready: false,
+};
+let _scanStream = null, _scanRAF = null;
+
+/* ================= STORAGE ================= */
+async function loadState(){
+  try{
+    const [m,a,l,s,me] = await Promise.all([
+      safeGet('members'), safeGet('addon-orders'), safeGet('audit-log'), safeGet('stock'), safeGet('meta')
+    ]);
+    if(m) state.members = JSON.parse(m.value);
+    if(a) state.addOnOrders = JSON.parse(a.value);
+    if(l) state.auditLog = JSON.parse(l.value);
+    if(s) state.stock = JSON.parse(s.value);
+    if(me) state.meta = JSON.parse(me.value);
+  }catch(err){ console.error('Load error', err); }
+  rolloverDaily();
+  if(state.members.length){ state.viewingMemberId = state.members[0].id; }
+  state.ready = true;
+  render();
+}
+async function safeGet(key){
+  try{ return await window.storage.get(key, false); }
+  catch(e){ return null; }
+}
+async function persist(key, value){
+  try{
+    await window.storage.set(key, JSON.stringify(value), false);
+    flashSaved();
+  }catch(e){ console.error('Save failed', e); toast('Could not save — changes may be lost on refresh.', 'danger'); }
+}
+function saveMembers(){ persist('members', state.members); }
+function saveOrders(){ persist('addon-orders', state.addOnOrders); }
+function saveAudit(){ persist('audit-log', state.auditLog); }
+function saveStock(){ persist('stock', state.stock); }
+function saveMeta(){ persist('meta', state.meta); }
+function flashSaved(){
+  const el = document.getElementById('saveIndicator');
+  if(!el) return;
+  el.style.color = 'var(--success)';
+  setTimeout(()=>{ el.style.color=''; }, 600);
+}
+function rolloverDaily(){
+  const today = todayStr();
+  if(state.meta.checkinsDate !== today){ state.meta.todayCheckins = 0; state.meta.checkinsDate = today; }
+}
+
+/* ================= DATE HELPERS ================= */
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function daysBetween(a,b){ // a,b = 'YYYY-MM-DD'
+  const da = new Date(a+'T00:00:00'), db = new Date(b+'T00:00:00');
+  return Math.round((da-db)/DAY);
+}
+function addDays(dateStr, n){
+  const d = new Date(dateStr+'T00:00:00'); d.setDate(d.getDate()+n);
+  return d.toISOString().slice(0,10);
+}
+function weekStartOf(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  const day = (d.getDay()+6)%7; // Mon=0
+  d.setDate(d.getDate()-day);
+  return d.toISOString().slice(0,10);
+}
+function fmtDate(dateStr){
+  if(!dateStr) return '—';
+  return new Date(dateStr+'T00:00:00').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+}
+function expiryDaysOf(m){ return daysBetween(m.expiryDate, todayStr()); }
+function lastVisitDaysOf(m){
+  if(!m.lastCheckIn) return daysBetween(todayStr(), m.joinDate);
+  return daysBetween(todayStr(), m.lastCheckIn.slice(0,10));
+}
+function weeklyDoneOf(m){
+  return m.weekStart === weekStartOf(todayStr()) ? m.wDone : 0;
+}
+
+/* ================= GENERAL HELPERS ================= */
+function toast(msg, type=''){
+  const wrap = document.getElementById('toast-wrap');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  wrap.appendChild(el);
+  setTimeout(()=>{ el.style.opacity='0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(),300); }, 2800);
+}
+function initials(name){ return name.split(' ').map(p=>p[0]).slice(0,2).join('').toUpperCase(); }
+function fmtRs(n){ return '₹' + Math.round(n).toLocaleString('en-IN'); }
+function expiryLabel(d){
+  if(d < 0) return {text:`Expired ${Math.abs(d)}d ago`, cls:'pill-danger'};
+  if(d <= 7) return {text:`Expires in ${d}d`, cls:'pill-gold'};
+  return {text:`Expires in ${d}d`, cls:'pill-neutral'};
+}
+function member(id){ return state.members.find(m=>m.id===id); }
+function redListMembers(){ return state.members.filter(m => m.status==='active' && lastVisitDaysOf(m) >= state.threshold); }
+function renewalsDue(){ return state.members.filter(m => m.status==='active' && expiryDaysOf(m) <= 7); }
+function logAudit(actor, action){
+  state.auditLog.unshift({actor, action, ts:new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'})});
+  state.auditLog = state.auditLog.slice(0,60);
+  saveAudit();
+}
+function closeModal(){ stopScanner(); document.getElementById('modal-root').innerHTML=''; }
+function openModal(html){ document.getElementById('modal-root').innerHTML =
+  `<div class="modal-backdrop" data-action="close-modal"><div class="modal" onclick="event.stopPropagation()">${html}</div></div>`;
+}
+function newId(){ return Date.now() + Math.floor(Math.random()*1000); }
+
+/* ================= RENDER: APP SWITCH ================= */
+function renderAppSwitch(){
+  const items = [['owner','Owner Dashboard'],['member','Member App'],['frontdesk','Front Desk']];
+  document.getElementById('appSwitch').innerHTML = items.map(([k,l])=>
+    `<button data-action="set-app" data-app="${k}" class="${state.app===k?'active':''}">${l}</button>`
+  ).join('');
+}
+
+/* ================= RENDER ROOT ================= */
+function render(){
+  if(!state.ready) return;
+  renderAppSwitch();
+  const root = document.getElementById('root');
+  if(state.app==='owner') root.innerHTML = renderOwner();
+  else if(state.app==='member') root.innerHTML = renderMember();
+  else root.innerHTML = renderFrontDesk();
+  afterRenderHooks();
+}
+function afterRenderHooks(){
+  const qrHolder = document.getElementById('qrCanvasHolder');
+  if(qrHolder && state.memberTab==='checkin'){
+    const m = member(state.viewingMemberId);
+    if(m && typeof QRCode !== 'undefined'){
+      qrHolder.innerHTML = '';
+      new QRCode(qrHolder, {text:'IRONTRACK|'+m.id, width:160, height:160, colorDark:'#0A0C0F', colorLight:'#ffffff'});
+    }
+  }
+}
+
+/* ================= OWNER ================= */
+function renderOwner(){
+  const tabs = [['dashboard','Dashboard'],['redlist','Red List'],['renewals','Renewals'],['members','Members'],['addons','Add-ons'],['audit','Audit Log']];
+  return `
+  <div class="container">
+    <div class="eyebrow">Owner / Manager</div>
+    <h1 class="page-title">Today's Operating View</h1>
+    <p class="page-sub">Silent churn ko early pakdo. Renewal time par collect karo.</p>
+    <div class="tabs">
+      ${tabs.map(([k,l])=>`<button class="${state.ownerTab===k?'active':''}" data-action="owner-tab" data-tab="${k}">${l}</button>`).join('')}
+    </div>
+    ${state.members.length===0 ? renderNoMembers() : `
+      ${state.ownerTab==='dashboard' ? renderDashboard() : ''}
+      ${state.ownerTab==='redlist' ? renderRedList() : ''}
+      ${state.ownerTab==='renewals' ? renderRenewals() : ''}
+      ${state.ownerTab==='members' ? renderMembersDirectory() : ''}
+      ${state.ownerTab==='addons' ? renderAddonsAdmin() : ''}
+      ${state.ownerTab==='audit' ? renderAudit() : ''}
+    `}
+  </div>`;
+}
+
+function renderNoMembers(){
+  return `
+  <div class="empty-state card">
+    <div class="ic">🏋️</div>
+    <div style="font-weight:800; font-size:16px; color:var(--text); margin-bottom:6px;">No members yet</div>
+    <div style="margin-bottom:18px;">Add your first real member to start tracking attendance, renewals and follow-ups.</div>
+    <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+      <button class="btn btn-primary" data-action="open-add-member">+ Add Member</button>
+    </div>
+  </div>`;
+}
+
+function renderDashboard(){
+  const active = state.members.filter(m=>m.status==='active').length;
+  const sevenDayActive = state.members.filter(m=>m.status==='active' && lastVisitDaysOf(m)<=7).length;
+  const openCases = redListMembers().length;
+  const dueRenewals = renewalsDue().length;
+
+  const kpis = [
+    ['Active Members', active, '', 'var(--blue)'],
+    ["Today's Check-ins", state.meta.todayCheckins, '', 'var(--success)'],
+    ['7-Day Active', sevenDayActive, `/ ${active||0}`, 'var(--success)'],
+    ['Open No-Show Cases', openCases, '', 'var(--danger)'],
+    ['Returned After Follow-up', state.meta.returnedCount, 'total', 'var(--success)'],
+    ['Renewals Due (7d)', dueRenewals, '', 'var(--gold)'],
+    ['Renewal Collected', fmtRs(state.meta.renewalCollected), 'total', 'var(--gold)'],
+    ['Add-on Revenue', fmtRs(state.meta.addOnRevenue), 'total', 'var(--gold)'],
+  ];
+
+  return `
+    <div class="kpi-grid">
+      ${kpis.map(([label,val,sub,accent])=>`
+        <div class="kpi" style="--accent:${accent}">
+          <div class="kpi-label">${label}</div>
+          <div class="kpi-value">${val}${sub?`<span>${sub}</span>`:''}</div>
+        </div>`).join('')}
+    </div>
+    <div style="display:grid; grid-template-columns:1.3fr 1fr; gap:16px;" class="dash-grid">
+      <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+          <div style="font-weight:800; font-size:15px;">Aaj kisko call karna hai?</div>
+          <span class="pill pill-danger">${openCases} open</span>
+        </div>
+        <div class="row-list">
+          ${redListMembers().slice(0,4).map(m=>rlRowCompact(m)).join('') || emptyRow('No one on the red list right now.')}
+        </div>
+        ${openCases>4 ? `<button class="btn btn-outline btn-sm" style="margin-top:12px;" data-action="owner-tab" data-tab="redlist">View all ${openCases} →</button>` : ''}
+      </div>
+      <div class="card">
+        <div style="font-weight:800; font-size:15px; margin-bottom:14px;">Kaunsi fee due hai?</div>
+        <div class="row-list">
+          ${renewalsDue().slice(0,4).map(m=>{
+            const e = expiryLabel(expiryDaysOf(m));
+            return `<div class="rl-row" style="padding:10px 12px;">
+              <div class="avatar">${initials(m.name)}</div>
+              <div class="rl-main"><div class="rl-name">${m.name}</div><div class="rl-meta">${m.plan}</div></div>
+              <span class="pill ${e.cls}">${e.text}</span>
+            </div>`;
+          }).join('') || emptyRow('Nothing due this week.')}
+        </div>
+      </div>
+    </div>
+    <div class="card" style="margin-top:16px;">
+      <div style="font-weight:800; font-size:15px; margin-bottom:12px;">Recent add-on activity</div>
+      <div class="row-list">
+        ${state.addOnOrders.slice(0,3).map(o=>`
+          <div class="ao-order-row" style="padding:10px 12px;">
+            <div class="avatar" style="background:var(--gold-dim); color:var(--gold); border-color:var(--gold);">₹</div>
+            <div class="rl-main"><div class="rl-name">${o.member}</div><div class="rl-meta">${o.item} · ${o.ts}</div></div>
+            <div class="mono" style="font-weight:700;">${fmtRs(o.amount)}</div>
+          </div>`).join('') || emptyRow('No add-on orders yet.')}
+      </div>
+    </div>
+    <style>@media(max-width:860px){.dash-grid{grid-template-columns:1fr !important;}}</style>
+  `;
+}
+
+function rlRowCompact(m){
+  return `<div class="rl-row" style="padding:10px 12px;">
+    <div class="avatar">${initials(m.name)}</div>
+    <div class="rl-main"><div class="rl-name">${m.name}</div><div class="rl-meta">Last visit ${lastVisitDaysOf(m)}d ago · ${m.trainer}</div></div>
+    <span class="rl-tag">${lastVisitDaysOf(m)}D ABSENT</span>
+    <button class="btn btn-outline btn-sm" data-action="open-outcome" data-id="${m.id}">Mark Outcome</button>
+  </div>`;
+}
+function emptyRow(text){ return `<div class="empty-state" style="padding:20px;"><div class="ic">✓</div>${text}</div>`; }
+
+function renderRedList(){
+  const filters = [['all','All'],['10-14','10–14 days'],['15-21','15–21 days'],['22','22+ days'],['expiring','Expiring soon']];
+  let list = redListMembers();
+  if(state.redlistFilter==='10-14') list = list.filter(m=>lastVisitDaysOf(m)>=10 && lastVisitDaysOf(m)<=14);
+  if(state.redlistFilter==='15-21') list = list.filter(m=>lastVisitDaysOf(m)>=15 && lastVisitDaysOf(m)<=21);
+  if(state.redlistFilter==='22') list = list.filter(m=>lastVisitDaysOf(m)>=22);
+  if(state.redlistFilter==='expiring') list = list.filter(m=>expiryDaysOf(m)<=7);
+
+  return `
+    <div class="threshold-bar">
+      <div style="font-size:12.5px; color:var(--text-dim); font-weight:600;">No-show threshold</div>
+      <input type="range" min="5" max="30" value="${state.threshold}" data-action="threshold" />
+      <span class="mono" style="font-weight:700;">${state.threshold} days</span>
+      <span class="pill pill-neutral" style="margin-left:auto;">${redListMembers().length} on list</span>
+    </div>
+    <div class="filter-chips">
+      ${filters.map(([k,l])=>`<div class="chip ${state.redlistFilter===k?'active':''}" data-action="redlist-filter" data-filter="${k}">${l}</div>`).join('')}
+    </div>
+    <div class="row-list">
+      ${list.map(m=>`
+        <div class="rl-row">
+          <div class="avatar">${initials(m.name)}</div>
+          <div class="rl-main">
+            <div class="rl-name">${m.name}</div>
+            <div class="rl-meta">${m.phone} · ${m.plan} · Trainer: ${m.trainer}</div>
+            <div class="rl-meta">Last outcome: ${m.outcome ? m.outcome : '—'}</div>
+          </div>
+          <span class="rl-tag">${lastVisitDaysOf(m)}D ABSENT</span>
+          <div class="rl-actions">
+            <button class="btn btn-ghost btn-sm" data-action="call" data-id="${m.id}">📞 Call</button>
+            <button class="btn btn-ghost btn-sm" data-action="whatsapp" data-id="${m.id}">💬 WhatsApp</button>
+            <button class="btn btn-outline btn-sm" data-action="open-outcome" data-id="${m.id}">Mark Outcome</button>
+          </div>
+        </div>`).join('') || emptyRow('No members match this filter.')}
+    </div>
+  `;
+}
+
+function renderRenewals(){
+  const list = state.members.filter(m=>m.status==='active').slice().sort((a,b)=>expiryDaysOf(a)-expiryDaysOf(b));
+  return `<div class="row-list">
+      ${list.map(m=>{
+        const d = expiryDaysOf(m);
+        const e = expiryLabel(d);
+        const stage = d<=0?'Expired':(d<=3?'Final reminder sent':(d<=7?'Renewal reminder sent':(d<=14?'Soft heads-up sent':'Not yet due')));
+        return `<div class="rn-row">
+          <div class="avatar">${initials(m.name)}</div>
+          <div class="rl-main"><div class="rl-name">${m.name}</div><div class="rl-meta">${m.plan} · Stage: ${stage}</div></div>
+          <span class="pill ${e.cls}">${e.text}</span>
+        </div>`;
+      }).join('') || emptyRow('No active members yet.')}
+    </div>`;
+}
+
+function renderMembersDirectory(){
+  return `
+    <div style="display:flex; justify-content:flex-end; margin-bottom:14px;">
+      <button class="btn btn-primary btn-sm" data-action="open-add-member">+ Add Member</button>
+    </div>
+    <div class="row-list">
+      ${state.members.map(m=>`
+        <div class="rl-row">
+          <div class="avatar">${initials(m.name)}</div>
+          <div class="rl-main">
+            <div class="rl-name">${m.name} ${m.status!=='active'?`<span class="pill pill-neutral" style="margin-left:6px;">${m.status}</span>`:''}</div>
+            <div class="rl-meta">${m.phone} · ${m.plan} · Joined ${fmtDate(m.joinDate)} · Expiry ${fmtDate(m.expiryDate)}</div>
+          </div>
+          <button class="btn btn-outline btn-sm" data-action="open-edit-member" data-id="${m.id}">Edit</button>
+        </div>`).join('') || emptyRow('No members yet.')}
+    </div>
+  `;
+}
+
+function renderAddonsAdmin(){
+  return `
+    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px;" class="ao-catalog">
+      ${addOnCatalog.map(a=>`
+        <div class="addon-card">
+          <div class="addon-cat">${a.category}</div>
+          <div class="addon-title">${a.title}</div>
+          <div class="addon-desc">${a.desc}</div>
+          <div class="rl-meta" style="margin-bottom:6px;">${a.stockKey ? (state.stock[a.stockKey]??0)+' in stock' : a.meta}</div>
+          <div class="addon-price">${fmtRs(a.price)}</div>
+        </div>`).join('')}
+    </div>
+    <div style="font-weight:800; font-size:15px; margin-bottom:12px;">Recent add-on orders</div>
+    <div class="row-list">
+      ${state.addOnOrders.map(o=>`
+        <div class="ao-order-row">
+          <div class="avatar">${initials(o.member)}</div>
+          <div class="rl-main"><div class="rl-name">${o.member}</div><div class="rl-meta">${o.item} · ${o.ts}</div></div>
+          <span class="pill pill-success">${o.status}</span>
+          <div class="mono" style="font-weight:700; min-width:70px; text-align:right;">${fmtRs(o.amount)}</div>
+        </div>`).join('') || emptyRow('No add-on orders yet.')}
+    </div>
+    <style>@media(max-width:860px){.ao-catalog{grid-template-columns:1fr !important;}}</style>
+  `;
+}
+
+function renderAudit(){
+  return `<div class="card">
+    ${state.auditLog.map(a=>`<div class="audit-row"><div><strong>${a.actor}</strong> — ${a.action}</div><div class="a-time">${a.ts}</div></div>`).join('') || '<div class="empty-state"><div class="ic">📋</div>Nothing logged yet.</div>'}
+  </div>`;
+}
+
+/* ================= MEMBER APP ================= */
+function renderMember(){
+  if(state.members.length===0){
+    return `<div class="container narrow"><div class="phone-shell"><div class="m-body">${renderNoMembers()}</div></div></div>`;
+  }
+  if(!member(state.viewingMemberId)) state.viewingMemberId = state.members[0].id;
+  const m = member(state.viewingMemberId);
+  const tabs = [['home','Home','🏠'],['checkin','Check-in','▦'],['renew','Renew','↻'],['addons','Add-ons','＋']];
+  return `
+  <div class="container narrow">
+    <div class="phone-shell">
+      <div class="m-header">
+        <div class="m-viewing">
+          <div class="eyebrow" style="margin:0;">Viewing as</div>
+          <select data-action="switch-member">
+            ${state.members.map(mm=>`<option value="${mm.id}" ${mm.id===m.id?'selected':''}>${mm.name}</option>`).join('')}
+          </select>
+        </div>
+        <div style="font-family:'Bebas Neue'; font-size:26px;">Hey ${m.name.split(' ')[0]} 👋</div>
+      </div>
+      <div class="m-body">
+        ${state.memberTab==='home' ? memberHome(m) : ''}
+        ${state.memberTab==='checkin' ? memberCheckin(m) : ''}
+        ${state.memberTab==='renew' ? memberRenew(m) : ''}
+        ${state.memberTab==='addons' ? memberAddons(m) : ''}
+      </div>
+      <div class="bottom-nav">
+        ${tabs.map(([k,l,ic])=>`<button class="${state.memberTab===k?'active':''}" data-action="member-tab" data-tab="${k}"><span class="ic">${ic}</span>${l}</button>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function streakRing(pct, num){
+  const r = 40, c = 2*Math.PI*r;
+  const off = c - (Math.min(100,pct)/100)*c;
+  return `<div class="streak-ring">
+    <svg width="96" height="96">
+      <circle cx="48" cy="48" r="${r}" stroke="#20242C" stroke-width="8" fill="none"/>
+      <circle cx="48" cy="48" r="${r}" stroke="#B6FF3D" stroke-width="8" fill="none" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${off}"/>
+    </svg>
+    <div class="streak-num"><div class="n">${num}</div><div class="l">Day Streak</div></div>
+  </div>`;
+}
+
+function memberHome(m){
+  const eD = expiryDaysOf(m);
+  const e = expiryLabel(eD);
+  const wDone = weeklyDoneOf(m);
+  const pct = Math.min(100, (m.streak/30)*100 + 10);
+  const lv = lastVisitDaysOf(m);
+  return `
+    <div class="membership-card">
+      <div class="mc-top">
+        <div><div class="mc-plan">${m.plan}</div><div class="mc-expiry">Valid until ${fmtDate(m.expiryDate)}</div></div>
+        <span class="pill ${e.cls}">${e.text}</span>
+      </div>
+      <div class="streak-wrap">
+        ${streakRing(pct, m.streak)}
+        <div>
+          <div style="font-size:12px; color:var(--text-dim); margin-bottom:8px;">This week: ${wDone}/${m.wTarget} planned visits</div>
+          <div class="week-dots">${Array.from({length:m.wTarget}).map((_,i)=>`<div class="week-dot ${i<wDone?'filled':''}"></div>`).join('')}</div>
+        </div>
+      </div>
+      <div class="rl-meta" style="margin-bottom:14px;">Last visit: ${!m.lastCheckIn ? 'Never' : (lv===0?'Today':lv+' days ago')} · Trainer: ${m.trainer}</div>
+      <button class="btn btn-primary btn-block" data-action="member-tab" data-tab="checkin">Show My QR to Check In</button>
+    </div>
+    ${eD<=7 ? `
+    <div class="card" style="margin-top:14px; border-color:var(--gold);">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px;">
+        <div><div style="font-weight:800; font-size:14px;">Renewal due soon</div><div class="rl-meta">Lock in your plan before it lapses.</div></div>
+        <button class="btn btn-outline btn-sm" data-action="member-tab" data-tab="renew">Renew</button>
+      </div>
+    </div>` : ''}
+  `;
+}
+
+function memberCheckin(m){
+  if(m._justCheckedIn){
+    return `
+    <div class="checkin-success">
+      <div class="tick">✓</div>
+      <div style="font-family:'Bebas Neue'; font-size:24px;">Checked In</div>
+      <div class="rl-meta" style="margin-bottom:16px;">${m._resolvedCase ? 'No-show case resolved — welcome back!' : 'Streak updated for today.'}</div>
+      <div class="pill pill-success" style="display:inline-flex;">🔥 ${m.streak} Day Streak</div>
+      <button class="btn btn-outline btn-block" style="margin-top:20px;" data-action="member-tab" data-tab="home">Back to Home</button>
+    </div>`;
+  }
+  const blocked = m.lastCheckIn && (Date.now() - new Date(m.lastCheckIn).getTime()) < 5*60000;
+  return `
+    <div style="text-align:center;">
+      <div class="eyebrow">Your Gate QR</div>
+      <div id="qrCanvasHolder"></div>
+      <div class="rl-meta" style="margin:14px 0 6px;">Show this to the front-desk scanner, or simulate the gate scan below.</div>
+      ${blocked ? `<div class="rl-meta" style="color:var(--gold);">Already checked in recently — duplicate scans are blocked for 5 minutes.</div>` : ''}
+      <button class="btn btn-primary btn-block" style="margin-top:14px;" data-action="do-checkin" data-id="${m.id}" ${blocked?'disabled':''}>Simulate Gate Scan</button>
+    </div>`;
+}
+
+function memberRenew(m){
+  const p = planCatalog[state.selectedPlanIdx];
+  const strike = planStrike(p.months);
+  const final = p.price;
+  if(m._renewalPaid){
+    return `
+    <div class="checkin-success">
+      <div class="tick">✓</div>
+      <div style="font-family:'Bebas Neue'; font-size:24px;">Payment Successful</div>
+      <div class="rl-meta" style="margin-bottom:16px;">${fmtRs(m._lastPaidAmount)} received. Membership extended to ${fmtDate(m.expiryDate)}.</div>
+      <div class="card" style="text-align:left;">
+        <div class="rl-meta">Receipt</div>
+        <div style="display:flex; justify-content:space-between; margin-top:6px;"><span>${m._lastPaidLabel}</span><span class="mono">${fmtRs(m._lastPaidAmount)}</span></div>
+      </div>
+      <button class="btn btn-outline btn-block" style="margin-top:20px;" data-action="member-tab" data-tab="home">Back to Home</button>
+    </div>`;
+  }
+  if(m._renewalPending){
+    return `<div class="checkin-success"><div class="tick" style="color:var(--gold); border-color:var(--gold); background:var(--gold-dim);">⏳</div>
+      <div style="font-family:'Bebas Neue'; font-size:22px;">Confirming Payment…</div>
+      <div class="rl-meta">Waiting for provider confirmation (simulated). Please don't close this screen.</div></div>`;
+  }
+  return `
+    <div class="eyebrow">Renew Membership</div>
+    <div class="rl-meta" style="margin-bottom:16px;">Current plan ${expiryDaysOf(m)>=0?`expires in ${expiryDaysOf(m)} days`:`expired ${Math.abs(expiryDaysOf(m))} days ago`}.</div>
+    ${planCatalog.map((pl,i)=>`
+      <div class="plan-option ${state.selectedPlanIdx===i?'selected':''}" data-action="select-plan" data-idx="${i}">
+        <div><div style="font-weight:700;">${pl.label}</div><div class="rl-meta">Save ${fmtRs(planStrike(pl.months)-pl.price)}</div></div>
+        <div class="po-price"><span class="po-strike">${fmtRs(planStrike(pl.months))}</span>${fmtRs(pl.price)}</div>
+      </div>`).join('')}
+    <div class="rl-meta" style="margin:12px 0;">Payment is simulated in this build. Card/UPI details are never stored in-app — connect a real payment provider (e.g. Razorpay) before going live.</div>
+    <button class="btn btn-primary btn-block" data-action="pay-renewal" data-id="${m.id}">Pay ${fmtRs(final)}</button>
+  `;
+}
+
+function memberAddons(m){
+  return `
+    <div class="eyebrow">Personal Training, Diet & Supplements</div>
+    ${addOnCatalog.map(a=>{
+      const outOfStock = a.stockKey && (state.stock[a.stockKey]??0) <= 0;
+      return `
+      <div class="addon-card">
+        <div class="addon-cat">${a.category}</div>
+        <div class="addon-title">${a.title}</div>
+        <div class="addon-desc">${a.desc}</div>
+        <div class="rl-meta" style="margin-bottom:10px;">${a.stockKey ? (state.stock[a.stockKey]??0)+' in stock' : a.meta}</div>
+        <div class="addon-foot">
+          <div class="addon-price">${fmtRs(a.price)}</div>
+          <button class="btn btn-primary btn-sm" data-action="buy-addon" data-addon="${a.id}" data-id="${m.id}" ${outOfStock?'disabled':''}>${outOfStock?'Out of stock':'Buy'}</button>
+        </div>
+      </div>`;
+    }).join('')}
+    <div class="rl-meta">Add-ons are never pre-selected and can be cancelled per the listed terms.</div>
+  `;
+}
+
+/* ================= FRONT DESK ================= */
+function renderFrontDesk(){
+  const q = (state.fdQuery||'').toLowerCase();
+  const list = state.members.filter(m=>m.name.toLowerCase().includes(q) || m.phone.includes(q));
+  return `
+  <div class="container narrow">
+    <div class="eyebrow">Front Desk</div>
+    <h1 class="page-title">Member Lookup</h1>
+    <p class="page-sub">Scan a member's QR with your camera, or search to check in manually.</p>
+    <button class="btn btn-primary btn-block" style="margin-bottom:16px;" data-action="open-scanner">📷 Scan QR with Camera</button>
+    <input class="search-input" placeholder="Search member…" value="${state.fdQuery||''}" data-action="fd-search" />
+    <div style="height:16px;"></div>
+    ${list.map(m=>`
+      <div class="fd-row">
+        <div class="avatar">${initials(m.name)}</div>
+        <div class="rl-main"><div class="rl-name">${m.name}</div><div class="rl-meta">${m.phone} · ${m.plan} · Last visit ${lastVisitDaysOf(m)===0 && m.lastCheckIn ?'today':(m.lastCheckIn? lastVisitDaysOf(m)+'d ago':'never')}</div></div>
+        <button class="btn btn-outline btn-sm" data-action="open-assisted" data-id="${m.id}">Assisted Check-in</button>
+      </div>`).join('') || emptyRow(state.members.length? 'No members found.' : 'No members yet — add one from Owner Dashboard → Members.')}
+  </div>`;
+}
+
+/* ================= MODALS: MEMBER CRUD ================= */
+function memberFormHTML(existing){
+  const m = existing || {};
+  return `
+    <label>Full name</label>
+    <input id="fName" value="${m.name||''}" placeholder="e.g. Rahul Sharma" />
+    <label>Mobile number</label>
+    <input id="fPhone" value="${m.phone||''}" placeholder="98765 43210" />
+    <div class="field-row">
+      <div>
+        <label>Plan</label>
+        <select id="fPlan">
+          ${planCatalog.map(p=>`<option value="${p.key}" ${m.planKey===p.key?'selected':''}>${p.label} — ${fmtRs(p.price)}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <label>Trainer</label>
+        <select id="fTrainer">
+          ${trainers.map(t=>`<option ${m.trainer===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="field-row">
+      <div>
+        <label>Join date</label>
+        <input id="fJoin" type="date" value="${m.joinDate||todayStr()}" />
+      </div>
+      <div>
+        <label>Weekly visit goal</label>
+        <select id="fTarget">
+          ${[2,3,4,5,6].map(n=>`<option value="${n}" ${m.wTarget===n?'selected':''}>${n} visits / week</option>`).join('')}
+        </select>
+      </div>
+    </div>
+  `;
+}
+function openAddMemberModal(){
+  openModal(`
+    <h3>Add Member</h3>
+    ${memberFormHTML()}
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-block" data-action="close-modal">Cancel</button>
+      <button class="btn btn-primary btn-block" data-action="save-new-member">Add Member</button>
+    </div>
+  `);
+}
+function openEditMemberModal(id){
+  const m = member(id);
+  const planKey = planCatalog.find(p=>p.label===m.plan)?.key || 'monthly';
+  openModal(`
+    <h3>Edit Member</h3>
+    ${memberFormHTML({...m, planKey})}
+    <label>Status</label>
+    <select id="fStatus">
+      ${['active','paused','cancelled'].map(s=>`<option value="${s}" ${m.status===s?'selected':''}>${s}</option>`).join('')}
+    </select>
+    <div class="modal-actions">
+      <button class="btn btn-danger btn-block" data-action="delete-member" data-id="${id}">Delete</button>
+      <button class="btn btn-primary btn-block" data-action="save-edit-member" data-id="${id}">Save Changes</button>
+    </div>
+  `);
+}
+function readMemberForm(){
+  const name = document.getElementById('fName').value.trim();
+  const phone = document.getElementById('fPhone').value.trim();
+  const planKey = document.getElementById('fPlan').value;
+  const trainer = document.getElementById('fTrainer').value;
+  const joinDate = document.getElementById('fJoin').value || todayStr();
+  const wTarget = Number(document.getElementById('fTarget').value);
+  const plan = planCatalog.find(p=>p.key===planKey);
+  return {name, phone, planKey, plan, trainer, joinDate, wTarget};
+}
+
+/* ================= MODALS: OUTCOME / ASSISTED ================= */
+function openOutcomeModal(id){
+  const m = member(id);
+  openModal(`
+    <h3>Mark Outcome — ${m.name}</h3>
+    <div class="rl-meta">Absent ${lastVisitDaysOf(m)} days · Last plan: ${m.plan}</div>
+    <label>Outcome</label>
+    <select id="outcomeSelect">
+      ${['Will return','Injured','Travelling','Timing issue','Unhappy','No response','Cancelled'].map(o=>`<option value="${o}" ${m.outcome===o?'selected':''}>${o}</option>`).join('')}
+    </select>
+    <label>Next action date</label>
+    <input type="date" id="nextActionDate" min="${todayStr()}" />
+    <label>Notes (optional)</label>
+    <textarea rows="3" id="outcomeNotes" placeholder="Anything staff should know…"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-block" data-action="close-modal">Cancel</button>
+      <button class="btn btn-primary btn-block" data-action="save-outcome" data-id="${id}">Save</button>
+    </div>
+  `);
+}
+function openAssistedModal(id){
+  const m = member(id);
+  openModal(`
+    <h3>Assisted Check-in</h3>
+    <div class="rl-meta">${m.name} · ${m.phone}</div>
+    <label>Reason (required)</label>
+    <select id="assistedReason">
+      <option>Forgot phone / QR</option>
+      <option>QR scanner issue</option>
+      <option>New member — first visit</option>
+      <option>Other</option>
+    </select>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-block" data-action="close-modal">Cancel</button>
+      <button class="btn btn-primary btn-block" data-action="confirm-assisted" data-id="${id}">Confirm Check-in</button>
+    </div>
+  `);
+}
+
+/* ================= CAMERA QR SCANNER ================= */
+function openScannerModal(){
+  openModal(`
+    <h3>Scan Member QR</h3>
+    <div class="scan-video-wrap">
+      <video id="scanVideo" playsinline autoplay muted></video>
+      <div class="scan-frame"></div>
+    </div>
+    <div class="scan-status" id="scanStatus">Point the camera at the member's QR code…</div>
+    <canvas id="scanCanvas" style="display:none;"></canvas>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-block" data-action="close-modal">Cancel</button>
+    </div>
+  `);
+  startScanner();
+}
+async function startScanner(){
+  const statusEl = document.getElementById('scanStatus');
+  try{
+    _scanStream = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+  }catch(e){
+    try{ _scanStream = await navigator.mediaDevices.getUserMedia({video:true}); }
+    catch(e2){
+      if(statusEl) statusEl.textContent = "Couldn't access camera — check browser permissions.";
+      return;
+    }
+  }
+  const video = document.getElementById('scanVideo');
+  if(!video) return;
+  video.srcObject = _scanStream;
+  const canvas = document.getElementById('scanCanvas');
+  const ctx = canvas.getContext('2d', {willReadFrequently:true});
+  function tick(){
+    if(!document.getElementById('scanVideo')){ stopScanner(); return; }
+    if(video.readyState === video.HAVE_ENOUGH_DATA){
+      canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imgData = ctx.getImageData(0,0,canvas.width,canvas.height);
+      const code = typeof jsQR !== 'undefined' ? jsQR(imgData.data, imgData.width, imgData.height) : null;
+      if(code && code.data){ handleScanResult(code.data); return; }
+    }
+    _scanRAF = requestAnimationFrame(tick);
+  }
+  _scanRAF = requestAnimationFrame(tick);
+}
+function stopScanner(){
+  if(_scanRAF) cancelAnimationFrame(_scanRAF);
+  _scanRAF = null;
+  if(_scanStream){ _scanStream.getTracks().forEach(t=>t.stop()); _scanStream = null; }
+}
+function handleScanResult(data){
+  stopScanner();
+  const parts = String(data).split('|');
+  const id = Number(parts[1]);
+  const m = member(id);
+  const statusEl = document.getElementById('scanStatus');
+  if(!m){
+    if(statusEl) statusEl.textContent = 'QR not recognised — not an IronTrack member code.';
+    setTimeout(()=>{ if(document.getElementById('scanVideo')) startScanner(); }, 1200);
+    return;
+  }
+  const blocked = m.lastCheckIn && (Date.now() - new Date(m.lastCheckIn).getTime()) < 5*60000;
+  if(blocked){
+    toast(`${m.name} already checked in recently.`, 'danger');
+    closeModal();
+    return;
+  }
+  performCheckIn(m, 'Front Desk (camera scan)');
+  toast(`${m.name} checked in via camera scan`, 'success');
+  closeModal();
+}
+
+/* ================= CORE ACTIONS ================= */
+function performCheckIn(m, actor){
+  const wasRedList = lastVisitDaysOf(m) >= state.threshold;
+  const nowIso = new Date().toISOString();
+  const ws = weekStartOf(todayStr());
+  const currentWDone = weeklyDoneOf(m);
+  m.lastCheckIn = nowIso;
+  m.streak += 1;
+  m.weekStart = ws;
+  m.wDone = Math.min(m.wTarget, currentWDone+1);
+  if(wasRedList){ state.meta.returnedCount += 1; m.outcome = 'Returned'; }
+  state.meta.todayCheckins += 1;
+  logAudit(actor, `${m.name} checked in${wasRedList?' — no-show case resolved':''}`);
+  saveMembers(); saveMeta();
+  return wasRedList;
+}
+
+/* ================= EVENTS ================= */
+document.addEventListener('click', (e)=>{
+  const t = e.target.closest('[data-action]');
+  if(!t) return;
+  const action = t.dataset.action;
+  const id = t.dataset.id ? Number(t.dataset.id) : null;
+
+  if(action==='set-app'){ state.app = t.dataset.app; state.ownerTab='dashboard'; state.memberTab='home'; render(); return; }
+  if(action==='owner-tab'){ state.ownerTab = t.dataset.tab; render(); return; }
+  if(action==='member-tab'){ state.memberTab = t.dataset.tab; render(); return; }
+  if(action==='redlist-filter'){ state.redlistFilter = t.dataset.filter; render(); return; }
+  if(action==='close-modal'){ closeModal(); return; }
+
+  if(action==='open-add-member'){ openAddMemberModal(); return; }
+  if(action==='save-new-member'){
+    const f = readMemberForm();
+    if(!f.name || !f.phone){ toast('Name and phone are required.', 'danger'); return; }
+    const join = f.joinDate;
+    const expiry = addDays(join, f.plan.months*30);
+    const newMember = {
+      id:newId(), name:f.name, phone:f.phone, plan:f.plan.label, planKey:f.planKey,
+      joinDate:join, expiryDate:expiry, lastCheckIn:null, streak:0,
+      weekStart:weekStartOf(todayStr()), wTarget:f.wTarget, wDone:0,
+      status:'active', trainer:f.trainer, outcome:null
+    };
+    state.members.push(newMember);
+    if(!state.viewingMemberId) state.viewingMemberId = newMember.id;
+    logAudit('Owner', `Added new member: ${f.name}`);
+    saveMembers();
+    toast(`${f.name} added`, 'success');
+    closeModal(); render();
+    return;
+  }
+  if(action==='open-edit-member'){ openEditMemberModal(id); return; }
+  if(action==='save-edit-member'){
+    const m = member(id);
+    const f = readMemberForm();
+    const status = document.getElementById('fStatus').value;
+    m.name = f.name; m.phone = f.phone; m.plan = f.plan.label; m.planKey = f.planKey;
+    m.trainer = f.trainer; m.wTarget = f.wTarget; m.joinDate = f.joinDate; m.status = status;
+    logAudit('Owner', `Edited member: ${m.name}`);
+    saveMembers();
+    toast('Member updated', 'success');
+    closeModal(); render();
+    return;
+  }
+  if(action==='delete-member'){
+    const m = member(id);
+    state.members = state.members.filter(x=>x.id!==id);
+    if(state.viewingMemberId===id) state.viewingMemberId = state.members[0]?.id || null;
+    logAudit('Owner', `Deleted member: ${m.name}`);
+    saveMembers();
+    toast('Member deleted', 'success');
+    closeModal(); render();
+    return;
+  }
+
+  if(action==='call'){ toast(`Calling ${member(id).name}…`); logAudit('Owner', `Called ${member(id).name}`); return; }
+  if(action==='whatsapp'){ toast(`WhatsApp opened for ${member(id).name}`); logAudit('Owner', `Messaged ${member(id).name} on WhatsApp`); return; }
+
+  if(action==='open-outcome'){ openOutcomeModal(id); return; }
+  if(action==='save-outcome'){
+    const m = member(id);
+    const outcome = document.getElementById('outcomeSelect').value;
+    m.outcome = outcome;
+    logAudit('Owner', `Marked ${m.name} outcome: ${outcome}`);
+    saveMembers();
+    toast(`Outcome saved for ${m.name}`, 'success');
+    closeModal(); render();
+    return;
+  }
+
+  if(action==='open-assisted'){ openAssistedModal(id); return; }
+  if(action==='confirm-assisted'){
+    const m = member(id);
+    const reason = document.getElementById('assistedReason').value;
+    performCheckIn(m, 'Front Desk');
+    logAudit('Front Desk', `Assisted check-in for ${m.name} — reason: ${reason}`);
+    toast(`${m.name} checked in`, 'success');
+    closeModal(); render();
+    return;
+  }
+
+  if(action==='open-scanner'){ openScannerModal(); return; }
+
+  if(action==='do-checkin'){
+    const m = member(id);
+    const wasRedList = performCheckIn(m, 'System (QR scan)');
+    m._justCheckedIn = true;
+    m._resolvedCase = wasRedList;
+    render();
+    return;
+  }
+
+  if(action==='select-plan'){ state.selectedPlanIdx = Number(t.dataset.idx); render(); return; }
+  if(action==='pay-renewal'){
+    const m = member(id);
+    m._renewalPending = true;
+    render();
+    setTimeout(()=>{
+      const p = planCatalog[state.selectedPlanIdx];
+      const base = expiryDaysOf(m) > 0 ? m.expiryDate : todayStr();
+      m.expiryDate = addDays(base, p.months*30);
+      m.plan = p.label; m.planKey = p.key;
+      m._renewalPending = false;
+      m._renewalPaid = true;
+      m._lastPaidAmount = p.price;
+      m._lastPaidLabel = `${p.label} — ${m.name}`;
+      state.meta.renewalCollected += p.price;
+      logAudit('Payment Gateway (simulated)', `Verified payment ${fmtRs(p.price)} from ${m.name} — membership extended to ${fmtDate(m.expiryDate)}`);
+      saveMembers(); saveMeta();
+      toast(`Payment verified — ${m.name}'s membership extended`, 'success');
+      render();
+    }, 1400);
+    return;
+  }
+
+  if(action==='buy-addon'){
+    const m = member(id);
+    const a = addOnCatalog.find(x=>x.id===t.dataset.addon);
+    if(a.stockKey){
+      if((state.stock[a.stockKey]??0) <= 0){ toast('Out of stock', 'danger'); return; }
+      state.stock[a.stockKey] -= 1;
+      saveStock();
+    }
+    state.addOnOrders.unshift({id:newId(), member:m.name, item:a.title, amount:a.price, status:'Active', ts:'Just now'});
+    state.addOnOrders = state.addOnOrders.slice(0,50);
+    state.meta.addOnRevenue += a.price;
+    logAudit('Payment Gateway (simulated)', `${m.name} purchased ${a.title} — ${fmtRs(a.price)}`);
+    saveOrders(); saveMeta();
+    toast(`${a.title} added for ${m.name}`, 'success');
+    render();
+    return;
+  }
+});
+
+document.addEventListener('change', (e)=>{
+  if(e.target.dataset.action==='switch-member'){ state.viewingMemberId = Number(e.target.value); state.memberTab='home'; render(); }
+  if(e.target.dataset.action==='threshold'){ state.threshold = Number(e.target.value); render(); }
+});
+document.addEventListener('input', (e)=>{
+  if(e.target.dataset.action==='fd-search'){ state.fdQuery = e.target.value; render(); }
+  if(e.target.dataset.action==='threshold'){ state.threshold = Number(e.target.value); render(); }
+});
+
+loadState();
+</script>
+</body>
+</html>
